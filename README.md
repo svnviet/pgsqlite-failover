@@ -19,3 +19,11 @@ SQLAlchemy Core only. Routing is per transaction; writes on the fallback are jou
 when the primary recovers. Known limits: the fallback schema must be provisioned separately, SQL must be
 portable between PostgreSQL and SQLite, replay is at-least-once (make writes idempotent), ORM Session,
 multi-process coordination and PG→SQLite bootstrap are on the roadmap (0.3–0.5).
+
+## Testing
+```bash
+pip install -e ".[postgres,test]"
+pytest            # integration tests start PostgreSQL with testcontainers (needs Docker)
+```
+Without Docker, point the suite at an existing server: `PGSQLITE_TEST_POSTGRES_URL=postgresql+psycopg://user:pw@host:5432/db pytest`
+(the tests create and drop an `events` table). Outages are simulated with a local TCP proxy.
