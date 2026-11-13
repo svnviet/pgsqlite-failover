@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pgsqlite-failover"
+version = "0.2.0"
+description = "SQLAlchemy failover middleware: PostgreSQL primary with a durable SQLite fallback, journal and replay."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = ["SQLAlchemy>=2.0"]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+test = ["pytest>=8", "testcontainers[postgres]>=4"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pgsqlite_failover"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
