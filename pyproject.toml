@@ -9,7 +9,24 @@ description = "SQLAlchemy failover middleware: PostgreSQL primary with a durable
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
+authors = [{ name = "svnviet" }]
+keywords = ["postgresql", "sqlite", "failover", "sqlalchemy", "fallback"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Database",
+  "Typing :: Typed",
+]
 dependencies = ["SQLAlchemy>=2.0"]
+
+[project.urls]
+Homepage = "https://github.com/svnviet/pgsqlite-failover"
+Issues = "https://github.com/svnviet/pgsqlite-failover/issues"
 
 [project.optional-dependencies]
 postgres = ["psycopg[binary]>=3.1"]
