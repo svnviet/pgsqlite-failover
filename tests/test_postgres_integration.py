@@ -117,3 +117,32 @@ def test_failed_replay_keeps_journal_and_stays_on_fallback(setup, proxy):
     assert pg_names(admin) == ["same"]
     assert eng.journal.pending_count() == 1
     assert eng.active_backend == "fallback"
+
+
+def test_orm_session_failover_and_replay(setup, proxy):
+    """Regression: Session(bind=engine) must work (engine.connect() returns a real Connection)."""
+    from sqlalchemy import select
+    from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+
+    class Base(DeclarativeBase):
+        pass
+
+    class Event(Base):
+        __tablename__ = "events"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        name: Mapped[str] = mapped_column()
+
+    eng, admin = setup
+    with Session(eng) as s:
+        s.add(Event(name="p"))
+        s.commit()
+    proxy.down()
+    eng.health.poll_once()
+    with Session(eng) as s:
+        s.add_all([Event(name="f1"), Event(name="f2")])
+        s.commit()
+    proxy.up()
+    eng.health.poll_once()
+    with Session(eng) as s:
+        assert sorted(s.scalars(select(Event.name))) == ["f1", "f2", "p"]
+    assert eng.active_backend == "primary"

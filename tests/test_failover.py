@@ -58,3 +58,37 @@ def test_rolled_back_fallback_txn_not_journaled(tmp_path):
     except RuntimeError:
         pass
     assert eng.journal.pending_count() == 0 and names(eng.fallback) == []
+
+
+def test_orm_session_bind_works_and_journals(tmp_path):
+    from sqlalchemy import String, select
+    from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+
+    class Base(DeclarativeBase):
+        pass
+
+    class Event(Base):
+        __tablename__ = "events"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        name: Mapped[str] = mapped_column(String)
+
+    primary = create_engine(f"sqlite:///{tmp_path / 'primary.db'}")
+    eng = FailoverEngine(primary_engine=primary, storage_dir=tmp_path / "store", monitor=False)
+    Base.metadata.create_all(primary)
+    Base.metadata.create_all(eng.fallback)
+
+    with Session(eng) as s:  # healthy: goes to primary
+        s.add(Event(name="p"))
+        s.commit()
+    eng.health.mark_down()
+    with Session(eng) as s:  # degraded: fallback + journal
+        s.add_all([Event(name="f1"), Event(name="f2")])
+        s.commit()
+    with Session(eng) as s:
+        s.add(Event(name="rolled-back"))
+        s.rollback()
+    assert eng.journal.pending_count() == 1
+    eng.health.poll_once()
+    with Session(eng) as s:
+        assert sorted(s.scalars(select(Event.name))) == ["f1", "f2", "p"]
+    assert eng.active_backend == "primary" and eng.journal.pending_count() == 0
