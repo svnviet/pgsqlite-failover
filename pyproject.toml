@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pgsqlite-failover"
-version = "0.2.1"
+version = "0.2.2"
 description = "SQLAlchemy failover middleware: PostgreSQL primary with a durable SQLite fallback, journal and replay."
 readme = "README.md"
 license = { file = "LICENSE" }

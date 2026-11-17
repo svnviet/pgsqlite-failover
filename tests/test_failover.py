@@ -92,3 +92,19 @@ def test_orm_session_bind_works_and_journals(tmp_path):
     with Session(eng) as s:
         assert sorted(s.scalars(select(Event.name))) == ["f1", "f2", "p"]
     assert eng.active_backend == "primary" and eng.journal.pending_count() == 0
+
+
+def test_custom_fallback_path(tmp_path):
+    custom = tmp_path / "data" / "my-fallback.sqlite"
+    primary = create_engine(f"sqlite:///{tmp_path / 'p.db'}")
+    eng = FailoverEngine(primary_engine=primary, fallback_path=custom, storage_dir=tmp_path / "s", monitor=False)
+    with eng.fallback.begin() as c:
+        c.execute(text(DDL))
+    assert custom.exists() and eng.config.fallback_path == custom
+    assert eng.config.journal_path.parent.name == "s"
+
+
+def test_relative_fallback_path_uses_project_root(tmp_path):
+    primary = create_engine(f"sqlite:///{tmp_path / 'p.db'}")
+    eng = FailoverEngine(primary_engine=primary, project_root=tmp_path, fallback_path="db/fb.db", monitor=False)
+    assert eng.config.fallback_path == (tmp_path / "db" / "fb.db").resolve()

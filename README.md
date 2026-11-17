@@ -12,9 +12,10 @@ with engine.begin() as conn:
 ```
 
 Storage defaults to `<project_root>/.pgsqlite-failover/` (`fallback.db`, `backup.db`, `journal.db`, `logs/`);
-override with `storage_dir=` or `PGSQLITE_FAILOVER_DIR`. Add the directory to `.gitignore`.
+override with `storage_dir=` or `PGSQLITE_FAILOVER_DIR`, or set a single file with
+`fallback_path="data/fallback.db"` (also `backup_path=`, `journal_path=`; relative paths resolve against `project_root`). Add the directory to `.gitignore`.
 
-## Status (0.2.1)
+## Status (0.2.2)
 SQLAlchemy Core and ORM (`Session(bind=engine)` / `sessionmaker(bind=engine)`); `connect()` returns a real `Connection`. Routing is per transaction; writes on the fallback are journaled and replayed in order
 when the primary recovers. Known limits: the fallback schema must be provisioned separately, SQL must be
 portable between PostgreSQL and SQLite, replay is at-least-once (make writes idempotent), multi-process coordination and PG→SQLite bootstrap are on the roadmap (0.3–0.5).
